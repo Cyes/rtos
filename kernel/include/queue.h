@@ -5,15 +5,16 @@
 #include <string.h>
 #include <stdio.h>
 #include "kernel.h"
-
+//#include ""
 struct queue_t{
 	char *memery;
 	int message;
 	int write,read;
 	int size,count;
 	int txlock,rxlock;
-	struct list_head task_tx;
-	struct list_head task_rx;
+	struct task_list_t tx,rx;
+	//struct list_head task_tx;
+	//struct list_head task_rx;
 };
 
 int queue_reset(struct queue_t *q, int count, int size, void *memery);

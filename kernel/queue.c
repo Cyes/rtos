@@ -14,8 +14,11 @@ int queue_reset(struct queue_t *q, int count, int size, void *memery)
 		q->write = q->read = 0;
 		q->txlock = q->rxlock = 0;
 		q->count = q->message = count;
-		INIT_LIST_HEAD(&q->task_tx);
-		INIT_LIST_HEAD(&q->task_rx);
+		
+		for(int i=0;i<MAX_PRIO_NUMBER;i++){
+			INIT_LIST_HEAD(&q->tx.list[i]);
+			INIT_LIST_HEAD(&q->rx.list[i]);
+		}
 	}
 	return 0;
 }
@@ -48,26 +51,20 @@ int queue_write(struct queue_t *q, const char *buffer, int length, int tick)
 			q->message --;
 			q->write ++;
 			q->write %= q->count;
-#if 0		
-			list_for_each_safe(pos,temp,&q->task_rx){
-				cur = list_entry(pos,struct task_desc_t,list);
-				if(cur->priority < priority){
-					obj = cur;
-					priority = cur->priority;
-				}
-			}
-			list_move(&obj->list,&g_task_list);		
-#else
-			list_for_each_safe(pos,temp,&q->task_rx){
-				cur = list_entry(pos,struct task_desc_t,list);
-				list_move(&cur->list,&g_task_list);
-			}
+	
+			if(q->rx.task_prio_bit){
+				cur = find_luckly_task(&q->rx);
+				task_list_move(cur,&q->rx ,&g_ready_task);	
+			}	
 			os_exit_critical();
-			return 0;
-#endif		
-		}else{
 			
-			list_move(&currentTD->list,&q->task_tx);
+			if(cur->prio > currentTD->prio){
+				os_yield();
+			}
+			
+			return 0;
+		}else{
+			task_list_move(currentTD,&g_ready_task,&q->tx);
 			os_exit_critical();
 			os_yield();
 		}
@@ -91,25 +88,20 @@ int queue_read(struct queue_t *q, char *buffer, int length, int tick)
 			q->message ++;
 			q->read ++;
 			q->read %= q->count;	
-#if 0		
-			list_for_each_safe(pos,temp,&q->task_tx){
-				cur = list_entry(pos,struct task_desc_t,list);
-				if(cur->priority < priority){
-					obj = cur;
-					priority = cur->priority;
-				}
-			}
-			list_move(&obj->list,&g_task_list);			
-#else
-			list_for_each_safe(pos,temp,&q->task_tx){
-				cur = list_entry(pos,struct task_desc_t,list);
-				list_move(&cur->list,&g_task_list);
-			}
+		
+			if(q->tx.task_prio_bit){
+				cur = find_luckly_task(&q->tx);
+				task_list_move(cur,&q->tx ,&g_ready_task);
+			}	
 			os_exit_critical();
+			
+			if(cur->prio > currentTD->prio){
+				os_yield();
+			}	
+
 			return 0;
-#endif		
 		}else{
-			list_move(&currentTD->list,&q->task_rx);
+			task_list_move(currentTD,&g_ready_task,&q->rx);
 			os_exit_critical();
 			os_yield();
 		}

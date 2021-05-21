@@ -7,17 +7,10 @@
 
 static LIST_HEAD(dev_list);
 static int cnt_critical = 0;
-static uint32_t g_os_tick = 1;
 
-
-uint32_t os_get_tick(void)
-{
-	return g_os_tick;
-}
 
 void os_inc_tick(void)
 {
-	g_os_tick ++;
 	os_sleep_callback();
 }
 
@@ -42,7 +35,7 @@ void os_yield(void)
 
 void os_start(void)
 {
-	create_daemon_task();//IDLE
+	create_daemon();//IDLE
 	next_context();
 	os_heartbeat(ENABLE);
 	os_svc();

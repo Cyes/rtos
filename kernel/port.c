@@ -1,11 +1,9 @@
 #include "port.h"
 
-
-
+#ifdef __GNUC__
 
 void SysTick_Handler(void)
 {
-	
 	os_inc_tick();
 	SCB->ICSR |= 1<< 28;
 }
@@ -26,7 +24,7 @@ void os_svc(void)
 void SVC_Handler(void)
 {
 	__asm volatile (
-									"    ldr r1, task              \n"
+									"    ldr r1, task_svc          \n"
 									"    ldr r1, [r1]              \n"
 									"    ldr r2, [r1]              \n"
 									"    add r2, #36               \n"
@@ -35,7 +33,7 @@ void SVC_Handler(void)
 									"    orr lr, lr, #0x04         \n"
 									"    bx r14                    \n"
 									"    .align 4                  \n"
-	                "    task: .word currentTD     \n"		
+                  "    task_svc: .word currentTD \n"		
 							 );
 }
 
@@ -51,8 +49,8 @@ void PendSV_Handler(void)
 									"    it eq                     \n"
 									"    vstmdbeq r0!, {s16-s31}   \n"
 									"    stmdb r0!, {r4-r11,r14}   \n"
-									"    ldr	r3, task2          \n"
-									"    ldr	r2, [r3]           \n"
+                  "    ldr r3, task_psv          \n"
+									"    ldr r2, [r3]              \n"
 									"    str r0, [r2]              \n"
 									"                              \n"
 									"    push {r3,r14}             \n"
@@ -74,16 +72,16 @@ void PendSV_Handler(void)
 									"                              \n"
 									"    bx r14                    \n"
 									"    .align 4                  \n"
-									"    task2: .word currentTD    \n"
+									"    task_psv: .word currentTD \n"
 	);
 	
 }
 
+#endif
 
 
+#ifdef __CC_ARM
 
-/* use mdk v5 cc */
-/*
 __asm void PendSV_Handler(void)
 {	
 	PRESERVE8
@@ -136,4 +134,8 @@ __asm void SVC_Handler(void)
 	orr lr, lr, #0x04
 	bx r14
 }
-*/
+
+
+#endif 
+
+

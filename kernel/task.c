@@ -1,28 +1,18 @@
 #include "task.h"
-
+#include <stdio.h>
 
 
 #define IDLE_TASK_STACK (256)
 #define HANDLER_MODE_LR (0xFFFFFFFD)
 #define THUMB_MODE_XPSR (0x01000000)
 
-
-LIST_HEAD(g_task_list);
-static LIST_HEAD(del_list);
+struct task_list_t del_task;
 static LIST_HEAD(g_task_list_sub);
 __attribute((aligned (8)))static int stack[IDLE_TASK_STACK]={0};
 
 static int g_task_id = 0;
-static struct task_desc_t td_idle;
 struct task_desc_t*currentTD;
-
-
-
-
-
-
-
-
+static struct task_desc_t td_idle;
 
 struct psp_stack_t{
 	int r14_last;
@@ -38,21 +28,60 @@ struct psp_stack_t{
 	int xpsr;
 };
 
+struct task_list_t g_ready_task;
+struct task_list_t g_sleep_task;
+
+
+void *find_luckly_task(struct task_list_t *list)
+{
+	void *cur = NULL;
+	struct list_head *pos;
+	if(list->task_prio_bit ==0)printf("error. prio_bit = null \n");
+	int id = PRIORITY_ID(list->task_prio_bit);
+	pos = list->list[id].next;
+	cur = list_entry(pos,struct task_desc_t,list);
+	
+	return cur;
+}
+
+
+void task_list_add(struct task_desc_t *td, struct task_list_t *list)
+{
+    list_add(&td->list, &list->list[td->prio]);
+    (list->task_prio_bit) |= PRIORITY_BIT(td->prio);
+    list->active ++;
+}
+
+void task_list_move(struct task_desc_t *td, struct task_list_t *curlist, struct task_list_t *newlist)
+{
+	int prio = td->prio;
+	
+	list_move(&td->list,&newlist->list[prio]);
+	if(list_empty(&curlist->list[prio])){
+		(curlist->task_prio_bit) &= ~PRIORITY_BIT(prio);
+	}
+	(newlist->task_prio_bit) |= PRIORITY_BIT(prio);
+	curlist->active --;
+	newlist->active ++;
+	
+}
+
 void os_task_exit(void)
 {
-	list_move(&currentTD->list,&del_list);
+	task_list_move(currentTD,&g_ready_task,&del_task);
 	os_yield();
 	for(;;);
 }
 
-void task_create(struct task_desc_t *td,void *stack,int stack_size,void *pfunc,void *param,int pri,void *name)
+void task_create(struct task_desc_t *td,void *stack,int stack_size,void *pfunc,void *param,int prio,void *name)
 {
 	struct psp_stack_t *psk;
 	
-	td->id = g_task_id ++;
-	td->priority = pri;
+	td->uid = g_task_id ++;
+	td->prio = prio%MAX_PRIO_NUMBER;
 	strncpy(td->name,name,sizeof(td->name));
 	td->stack = (int *)stack  +stack_size -17;
+	
 	psk = (void*)((int*)stack +stack_size -9);
 	psk->r0 = (int)param;
 	psk->pc = (int)pfunc;
@@ -60,59 +89,17 @@ void task_create(struct task_desc_t *td,void *stack,int stack_size,void *pfunc,v
 	psk->xpsr = THUMB_MODE_XPSR;
 	psk->r14_last = HANDLER_MODE_LR;	
 	
-	list_add(&td->list,&g_task_list);
+	INIT_LIST_HEAD(&td->list);
+	task_list_add(td,&g_ready_task);
 }
-
-
-
-//0 = resv
-//1 = max priority
-//...
-//255 = min
 
 void next_context(void)
 {
-	//no error check
-	
-	struct list_head   *pos = NULL;
-	struct task_desc_t *cur = NULL;
-	struct task_desc_t *top = NULL;
-	
+
 	os_enter_critical();
-	
-	//move sub list to main list 
-	if(list_empty(&g_task_list)){
-		list_splice(&g_task_list_sub,&g_task_list);
-		INIT_LIST_HEAD(&g_task_list_sub);
-	}
-
-	//search high prioroty task
-	list_for_each(pos,&g_task_list){
-		cur = list_entry(pos,struct task_desc_t,list);
-		top = (NULL == top)?cur:top;
-		if(cur->priority < top->priority){
-			top = cur;
-		}
-	}
-	
-	//search high prioroty task at sub list
-	list_for_each(pos,&g_task_list_sub){
-		cur = list_entry(pos,struct task_desc_t,list);
-		if(cur->priority < top->priority){
-			top = cur;
-		}
-	}
-	
-	//not move
-	if(top->list.next != &g_task_list_sub){		
-		list_move(&top->list,&g_task_list_sub);
-	}
-	
-	currentTD = top;
+	currentTD = find_luckly_task(&g_ready_task);
 	os_exit_critical();
-	
 }
-
 
 static void daemon_task(void *param)
 {
@@ -121,9 +108,9 @@ static void daemon_task(void *param)
 	}
 }
 
-void create_daemon_task(void)
+void create_daemon(void)
 {
-	task_create(&td_idle,&stack,IDLE_TASK_STACK,daemon_task,(void*)0,255,"daemon");
+	task_create(&td_idle,&stack,IDLE_TASK_STACK,daemon_task,(void*)0,MAX_PRIO_NUMBER -1,"daemon");
 }
 
 
