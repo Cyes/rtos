@@ -13,8 +13,6 @@ struct queue_t{
 	int size,count;
 	int txlock,rxlock;
 	struct task_list_t tx,rx;
-	//struct list_head task_tx;
-	//struct list_head task_rx;
 };
 
 int queue_reset(struct queue_t *q, int count, int size, void *memery);

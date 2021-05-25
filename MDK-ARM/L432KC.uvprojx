@@ -10,15 +10,14 @@
       <TargetName>L432KC</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
-      <pArmCC>6160000::V6.16::ARMCLANG</pArmCC>
       <pCCUsed>6160000::V6.16::ARMCLANG</pCCUsed>
       <uAC6>1</uAC6>
       <TargetOption>
         <TargetCommonOption>
           <Device>STM32L432KCUx</Device>
           <Vendor>STMicroelectronics</Vendor>
-          <PackID>Keil.STM32L4xx_DFP.2.5.0</PackID>
-          <PackURL>https://www.keil.com/pack/</PackURL>
+          <PackID>Keil.STM32L4xx_DFP.1.4.0</PackID>
+          <PackURL>http://www.keil.com/pack</PackURL>
           <Cpu>IRAM(0x20000000,0x0000C000) IRAM2(0x10000000,0x00004000) IROM(0x08000000,0x00040000) CPUTYPE("Cortex-M4") FPU2 CLOCK(12000000) ELITTLE</Cpu>
           <FlashUtilSpec></FlashUtilSpec>
           <StartupFile></StartupFile>
@@ -340,7 +339,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32L432xx</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;../Drivers/STM32L4xx_HAL_Driver/Inc;../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32L4xx/Include;../Drivers/CMSIS/Include;..\bsp\inc;..\kernel\include;..\kernel</IncludePath>
+              <IncludePath>..\Drivers\STM32L4xx_HAL_Driver\Inc\Legacy;../Drivers/STM32L4xx_HAL_Driver/Inc;../Drivers/CMSIS/Include;..\Drivers\CMSIS\Device;..\kernel\include;..\kernel;..\demo</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -382,22 +381,17 @@
       </TargetOption>
       <Groups>
         <Group>
-          <GroupName>app</GroupName>
+          <GroupName>demo</GroupName>
           <Files>
             <File>
               <FileName>main.c</FileName>
               <FileType>1</FileType>
-              <FilePath>../Core/Src/main.c</FilePath>
-            </File>
-            <File>
-              <FileName>md5.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Core\Src\md5.c</FilePath>
+              <FilePath>..\demo\main.c</FilePath>
             </File>
             <File>
               <FileName>bsp .c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\bsp\src\bsp .c</FilePath>
+              <FilePath>..\demo\bsp .c</FilePath>
             </File>
           </Files>
         </Group>
@@ -429,20 +423,25 @@
               <FileType>1</FileType>
               <FilePath>..\kernel\timer.c</FilePath>
             </File>
+            <File>
+              <FileName>mem.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\kernel\mem.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
           <GroupName>Drivers/CMSIS</GroupName>
           <Files>
             <File>
-              <FileName>system_stm32l4xx.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>../Core/Src/system_stm32l4xx.c</FilePath>
-            </File>
-            <File>
               <FileName>startup_stm32l432xx.s</FileName>
               <FileType>2</FileType>
-              <FilePath>..\Core\Src\startup_stm32l432xx.s</FilePath>
+              <FilePath>..\demo\startup_stm32l432xx.s</FilePath>
+            </File>
+            <File>
+              <FileName>system_stm32l4xx.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Drivers\CMSIS\Device\system_stm32l4xx.c</FilePath>
             </File>
           </Files>
         </Group>

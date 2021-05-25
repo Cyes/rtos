@@ -35,10 +35,11 @@ void HAL_MspInit(void)
 
 
 
-
+#include "kernel.h"
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) 
 { 
 	tmr ++;
+	currentTD->run ++ ;
 } 
 
  void MX_TIM7_Init(void)
@@ -84,7 +85,7 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* htim_base)
     /* Peripheral clock enable */
     __HAL_RCC_TIM7_CLK_ENABLE();
     /* TIM7 interrupt Init */
-    HAL_NVIC_SetPriority(TIM7_IRQn, 6, 0);
+    HAL_NVIC_SetPriority(TIM7_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(TIM7_IRQn);
   /* USER CODE BEGIN TIM7_MspInit 1 */
 
@@ -105,12 +106,11 @@ void SystemClock_Config(void)
   /** Configure LSE Drive Capability
   */
   HAL_PWR_EnableBkUpAccess();
-  __HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
+  //__HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSE|RCC_OSCILLATORTYPE_MSI;
-  RCC_OscInitStruct.LSEState = RCC_LSE_ON;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_MSI;
   RCC_OscInitStruct.MSIState = RCC_MSI_ON;
   RCC_OscInitStruct.MSICalibrationValue = 0;
   RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_10;
@@ -128,7 +128,7 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
   {
     Error_Handler();
   }
@@ -146,7 +146,7 @@ void SystemClock_Config(void)
   }
   /** Enable MSI Auto calibration
   */
-  HAL_RCCEx_EnableMSIPLLMode();
+  //HAL_RCCEx_EnableMSIPLLMode();
 }
 
 
@@ -246,6 +246,7 @@ void NMI_Handler(void)
 
 void HardFault_Handler(void)
 {
+	USART2->TDR = 0X23;
   while (1)
   {
   }

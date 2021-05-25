@@ -4,7 +4,7 @@
 #include "kernel.h"
 
 void os_sleep(int tick);
-void os_sleep_callback(void);
+void os_tick_callback(void);
 
 
 #endif

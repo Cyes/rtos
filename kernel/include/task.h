@@ -4,6 +4,8 @@
 #include "kernel.h"
 #include "list.h"
 
+#define DEFAULT_STACK_BYTE (1024)
+
 
 struct task_desc_t{
 	void *stack;
@@ -11,8 +13,10 @@ struct task_desc_t{
 	int prio:16;
 	void *func;
 	void *param;
-	char name[8];
+	char *name;
 	uint32_t tick;
+	uint32_t run;
+	struct list_head mirror;
 	struct list_head list;
 
 } ;

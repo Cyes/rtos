@@ -5,15 +5,22 @@
 #include <string.h>
 #include <stdint.h>
 #include "list.h"
-
+#include "task.h"
+#include "mem.h"
 
 #define MAX_PRIO_NUMBER (32)  //support 32 level priority max
+#define SYSTEM_TICK_FREQ (1000U)
+#define TICK(x) (x * SYSTEM_TICK_FREQ / 1000U)
+#ifndef false
+#define false (0)
+#define true  (!false)
 
+#endif
 
 struct task_list_t{
 		unsigned int init:1;                       //
 		unsigned int active:31;                    //total task
-    unsigned int task_prio_bit;                //[(MAX_PRI_NUMBER +31)/32];     //bit flag
+    unsigned int prio_bit;                //[(MAX_PRI_NUMBER +31)/32];     //bit flag
     struct list_head list[MAX_PRIO_NUMBER];    //就绪任务链表数组
 };
 
@@ -23,6 +30,7 @@ void os_inc_tick(void);
 void os_exit_critical(void);
 void os_enter_critical(void);
 void os_heartbeat(int status);
+void os_schedule(int status);
 
 
 #endif

@@ -5,24 +5,39 @@
 
 
 
-static LIST_HEAD(dev_list);
-static int cnt_critical = 0;
 
+
+
+static LIST_HEAD(dev_list);
+static int g_critical_cnt = 0;
+static int g_schedule_cnt = 0;
+
+void os_schedule(int status)
+{
+	os_enter_critical();
+	g_schedule_cnt = (status) ? (g_schedule_cnt-1) : (g_schedule_cnt+1) ;
+	os_exit_critical();
+}
 
 void os_inc_tick(void)
 {
-	os_sleep_callback();
+	os_enter_critical();
+	os_tick_callback();
+	if(!g_schedule_cnt){
+		os_yield();
+	}
+	os_exit_critical();
 }
 
 void os_enter_critical(void)
 {
 	__disable_irq();
-	cnt_critical ++;
+	g_critical_cnt ++;
 }
 
 void os_exit_critical(void)
 {
-	if(-- cnt_critical == 0){
+	if(-- g_critical_cnt == 0){
 		__enable_irq();
 	}
 }

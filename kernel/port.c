@@ -5,7 +5,6 @@
 void SysTick_Handler(void)
 {
 	os_inc_tick();
-	SCB->ICSR |= 1<< 28;
 }
 void os_disable_irq(void)
 {
@@ -54,7 +53,9 @@ void PendSV_Handler(void)
 									"    str r0, [r2]              \n"
 									"                              \n"
 									"    push {r3,r14}             \n"
+									"    cpsid i                   \n"
 									"    bl next_context           \n"
+									"    cpsie i                   \n"
 									"    pop {r3,r14}              \n"
 									"                              \n"
 									"    ldr r1, [r3]              \n"
