@@ -43,8 +43,7 @@
 ### 参考
 
 * FreeRTOS
-* RT-Thread
-* LiteOS
+* RTEMS
 * Linux
 
 
