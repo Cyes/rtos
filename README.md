@@ -43,7 +43,6 @@
 ### 参考
 
 * FreeRTOS
-* RTEMS
 * Linux
 
 
