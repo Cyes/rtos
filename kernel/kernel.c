@@ -31,14 +31,14 @@ void os_inc_tick(void)
 
 void os_enter_critical(void)
 {
-	__disable_irq();
+	os_disable_irq();
 	g_critical_cnt ++;
 }
 
 void os_exit_critical(void)
 {
 	if(-- g_critical_cnt == 0){
-		__enable_irq();
+		os_enable_irq();
 	}
 }
 
@@ -52,6 +52,7 @@ void os_start(void)
 {
 	create_daemon();//IDLE
 	next_context();
+	*(uint32_t*)0xE000ED20 = 0xF0F00000;
 	os_heartbeat(ENABLE);
 	os_svc();
 	for(;;);

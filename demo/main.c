@@ -127,7 +127,6 @@ static int func4(void *param)
 
 int main(void)
 {
-	
   HAL_Init();
 	MX_GPIO_Init();
 	SystemClock_Config();    //32MHZ
