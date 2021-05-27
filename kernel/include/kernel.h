@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include "list.h"
 #include "task.h"
-#include "mem.h"
+#include "dynamic_block.h"
 
 #define MAX_PRIO_NUMBER (32)  //support 32 level priority max
 #define SYSTEM_TICK_FREQ (1000U)
@@ -14,8 +14,8 @@
 #ifndef false
 #define false (0)
 #define true  (!false)
-
 #endif
+#define printk printf
 
 struct task_list_t{
 		unsigned int init:1;                       //

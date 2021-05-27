@@ -8,12 +8,14 @@
 
 
 struct task_desc_t{
-	void *stack;
+	void *topstack;
 	int uid:16;
 	int prio:16;
+	void *base;
 	void *func;
-	void *param;
 	char *name;
+	void *param;
+	int stack_deep;
 	uint32_t tick;
 	uint32_t run;
 	struct list_head mirror;
@@ -38,8 +40,9 @@ void *find_luckly_task(struct task_list_t *list);
 //extern struct list_head g_task_list;
 extern struct task_desc_t *currentTD;
 
-void create_daemon(void);
 void next_context(void);
+void create_daemon(void);
+void task_info(char *buffer);
 void task_create(struct task_desc_t *td,void *stack,int stack_size, \
                  void *func,void *param,int prio,void *name);
 

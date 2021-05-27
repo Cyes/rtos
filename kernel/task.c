@@ -31,6 +31,22 @@ struct psp_stack_t{
 struct task_list_t g_ready_task;
 struct task_list_t g_sleep_task;
 
+void task_info(char *buffer)
+{
+	extern uint32_t tmr;
+	struct list_head *pos;
+	struct task_desc_t *ptd;
+	if(buffer == NULL) return ;
+	
+	int length = sprintf(buffer,"\nname\tuid\tprio\tstack\tcpu\n");
+	list_for_each(pos,&g_task_mirror){
+		ptd = list_entry(pos,struct task_desc_t,mirror);
+		length += sprintf(buffer + length,"%s\t%d\t%d\t%d\t%.2f%%\n",ptd->name,ptd->uid,ptd->prio,ptd->stack_deep,(float)ptd->run/tmr *100);
+		ptd->run = 0;
+	}
+	tmr = 0;
+}
+
 
 void *find_luckly_task(struct task_list_t *list)
 {
@@ -95,7 +111,8 @@ void task_create(struct task_desc_t *td,void *stack,int stack_size,void *pfunc,v
 		stack = os_malloc(stack_size);
 	}
 	stack_size = stack_size >> 2;
-	td->stack = (int *)stack  +stack_size -17;
+	td->topstack = (int *)stack  +stack_size -17;
+	td->base = stack;
 	psk = (void*)((int*)stack +stack_size -9);
 	psk->r0 = (int)param;
 	psk->pc = (int)pfunc;
@@ -111,8 +128,9 @@ void task_create(struct task_desc_t *td,void *stack,int stack_size,void *pfunc,v
 
 void next_context(void)
 {
-
 	currentTD = find_luckly_task(&g_ready_task);
+	currentTD->stack_deep = currentTD->topstack - currentTD->base;
+
 }
 static void daemon_task(void *param)
 {

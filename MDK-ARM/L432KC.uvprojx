@@ -393,6 +393,11 @@
               <FileType>1</FileType>
               <FilePath>..\demo\bsp .c</FilePath>
             </File>
+            <File>
+              <FileName>md5.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\demo\md5.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -424,9 +429,9 @@
               <FilePath>..\kernel\timer.c</FilePath>
             </File>
             <File>
-              <FileName>mem.c</FileName>
+              <FileName>dynamic_block .c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\kernel\mem.c</FilePath>
+              <FilePath>..\kernel\dynamic_block .c</FilePath>
             </File>
           </Files>
         </Group>

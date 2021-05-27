@@ -6,8 +6,6 @@
 
 
 
-
-
 static LIST_HEAD(dev_list);
 static int g_critical_cnt = 0;
 static int g_schedule_cnt = 0;
@@ -46,6 +44,9 @@ void os_yield(void)
 {
 	SCB->ICSR |= 1<< 28; //set pendsv
 }
+
+
+
 
 
 void os_start(void)
