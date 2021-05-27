@@ -55,7 +55,6 @@ int queue_write(struct queue_t *q, const char *buffer, int length, int tick)
 	for(;;){
 		os_enter_critical();
 		if(!queue_isfull(q)){
-			//printf("%s w\n",currentTD->name);
 			length = (length > q->size)?q->size:length;
 			char *writeto = (char *)q->memery + (q->write * q->size);
 			memset((void *)writeto, 0, q->size);
@@ -74,7 +73,6 @@ int queue_write(struct queue_t *q, const char *buffer, int length, int tick)
 			return 0;
 		}else{
 			task_list_move(currentTD,&g_ready_task,&q->tx);
-			//printf("%s w block\n",currentTD->name);
 			os_exit_critical();
 			os_yield();
 			
@@ -92,7 +90,6 @@ int queue_read(struct queue_t *q, char *buffer, int length, int tick)
 	for(;;){	
 		os_enter_critical();
 		if(!queue_isempty(q)){
-			//printf("%s r\n",currentTD->name);
 			length = (length > q->size)?q->size:length;
 			char *readfrom = (char *)q->memery + (q->read * q->size);
 			memcpy((void *)buffer, readfrom, length);
@@ -110,7 +107,6 @@ int queue_read(struct queue_t *q, char *buffer, int length, int tick)
 			return 0;
 		}else{
 			task_list_move(currentTD,&g_ready_task,&q->rx);
-			//printf("%s r block\n",currentTD->name);
 			os_exit_critical();
 			os_yield();
 		}

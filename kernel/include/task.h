@@ -8,14 +8,14 @@
 
 
 struct task_desc_t{
-	void *topstack;
+	void *stack;
+	void *stack_base;
+	int  stack_deep;
 	int uid:16;
 	int prio:16;
-	void *base;
 	void *func;
 	char *name;
 	void *param;
-	int stack_deep;
 	uint32_t tick;
 	uint32_t run;
 	struct list_head mirror;

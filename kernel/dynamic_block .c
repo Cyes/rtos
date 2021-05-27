@@ -56,7 +56,8 @@ void *os_malloc(int length)
 				break;
 			}
 			for(idle=1;idle<block;idle++){
-				if(mem.flag[index +idle] != 0) break;
+				if(mem.flag[index +idle] != 0) 
+						break;
 			}
 			if(idle == block){
 				for(idle = 0;idle < block-1 ;idle++){
@@ -78,7 +79,7 @@ void os_free(void *point)
 {
 	if(point == 0)return;
 	os_enter_critical();
-	int index = ((char*)point - mem.base)/CONFIG_HEAP_BLOCK;
+	int index = ((char *)point - mem.base)/CONFIG_HEAP_BLOCK;
 	for(;GET_BIT_NEXT(mem.flag[index]);index++){
 		mem.flag[index] = 0;
 		mem.allocate -- ;

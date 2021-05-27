@@ -42,23 +42,18 @@ static int func6(void *param)
 	for(;;){
 		//os_free(os_malloc(10));
 		queue_write(&q2,"AAAAAAAA",8,0);
-		//os_sleep(TICK(10));
+		os_sleep(TICK(1));
 	}
 }
 
-/*
-extern uint32_t tmr;
-extern struct task_desc_t td_idle;
-extern struct list_head g_task_mirror;
-struct list_head *pos;
-struct task_desc_t *ptd;
-*/
+
 static int func1(void *param)
 {
 	(void)param;
 	for(;;){
 		os_sleep(TICK(500));
 		HAL_GPIO_TogglePin(LD3_GPIO_Port,LD3_Pin);
+		
 		char *pbuf = os_malloc(512);
 		task_info(pbuf);
 		printf("%s\n",pbuf);
@@ -108,13 +103,15 @@ static int func3(void *param)
 static int func4(void *param)
 {
 	(void)param;
+	volatile char str[500] = {0};
 	for(;;){
 		static ST_MD5 *md5;
 		md5 = os_malloc(sizeof(ST_MD5));
-		MD5_Handler(md5,"123;sdjgoasng;kasbjfasgasgf",16);
+		MD5_Handler(md5,(uint8_t *)"123",3);
 		os_free(md5);
+		str[4] = 123;
 		os_sleep(TICK(1));
-		//os_free(os_malloc(600));
+		os_free(os_malloc(600));
 	}
 }
 
@@ -146,12 +143,16 @@ int main(void)
 #endif
 	
 	
+	
+	
+	
+	
 	/*          &TD   STACK  STACK_SIZE             FUNC   PARAM  PRIO  NAME */
 	task_create(&td[0],0,DEFAULT_STACK_BYTE,(void *)func1,(void*)0, 1 ,"task1");
 	
 	task_create(&td[1],0,DEFAULT_STACK_BYTE,(void *)func2,(void*)0, 6 ,"task2");
 	task_create(&td[2],0,DEFAULT_STACK_BYTE,(void *)func3,(void*)0, 6 ,"task3");//read
-	task_create(&td[3],0,DEFAULT_STACK_BYTE,(void *)func4,(void*)0, 1 ,"task4");
+	task_create(&td[3],0,DEFAULT_STACK_BYTE,(void *)func4,(void*)0, 5 ,"task4");
 	task_create(&td[4],0,DEFAULT_STACK_BYTE,(void *)func5,(void*)0, 8 ,"task5");//read
 	task_create(&td[5],0,DEFAULT_STACK_BYTE,(void *)func6,(void*)0, 8 ,"task6");
 

@@ -41,7 +41,8 @@ void task_info(char *buffer)
 	int length = sprintf(buffer,"\nname\tuid\tprio\tstack\tcpu\n");
 	list_for_each(pos,&g_task_mirror){
 		ptd = list_entry(pos,struct task_desc_t,mirror);
-		length += sprintf(buffer + length,"%s\t%d\t%d\t%d\t%.2f%%\n",ptd->name,ptd->uid,ptd->prio,ptd->stack_deep,(float)ptd->run/tmr *100);
+		length += sprintf(buffer + length,"%s\t%d\t%d\t%d\t%.1f%%\n", \
+							ptd->name,ptd->uid,ptd->prio,ptd->stack_deep,(float)ptd->run/tmr *100);
 		ptd->run = 0;
 	}
 	tmr = 0;
@@ -105,15 +106,19 @@ void task_create(struct task_desc_t *td,void *stack,int stack_size,void *pfunc,v
 	struct psp_stack_t *psk;
 	
 	td->uid = g_task_id ++;
-	td->prio = prio%MAX_PRIO_NUMBER;
+	td->prio = prio % MAX_PRIO_NUMBER;
 	td->name = name;
 	if(stack == NULL){
 		stack = os_malloc(stack_size);
 	}
-	stack_size = stack_size >> 2;
-	td->topstack = (int *)stack  +stack_size -17;
-	td->base = stack;
-	psk = (void*)((int*)stack +stack_size -9);
+	td->stack_base = stack + stack_size;
+	//stack_size = stack_size >> 2;
+	//td->stack = (int *)stack  +stack_size -17;
+	//psk = (void*)((int*)stack +stack_size -9);
+	td->stack = (char *)td->stack_base - 68;
+	psk = (void *)((char *)td->stack_base - 36);
+	
+	
 	psk->r0 = (int)param;
 	psk->pc = (int)pfunc;
 	psk->lr = (int)os_task_exit;
@@ -128,8 +133,8 @@ void task_create(struct task_desc_t *td,void *stack,int stack_size,void *pfunc,v
 
 void next_context(void)
 {
-	currentTD = find_luckly_task(&g_ready_task);
-	currentTD->stack_deep = currentTD->topstack - currentTD->base;
+	currentTD = find_luckly_task(&g_ready_task);	
+	currentTD->stack_deep = (currentTD->stack_base - currentTD->stack );
 
 }
 static void daemon_task(void *param)
@@ -141,7 +146,7 @@ static void daemon_task(void *param)
 
 void create_daemon(void)
 {
-	task_create(&td_idle,0,IDLE_STACK_BYTE,daemon_task,(void*)0,IDLE_TASK_PRIO,"idle");
+	task_create(&td_idle,0,IDLE_STACK_BYTE,daemon_task,(void *)0,IDLE_TASK_PRIO,"daemon");
 }
 
 
