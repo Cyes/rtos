@@ -20,27 +20,23 @@ static struct dev_t uart2;
 static int func5(void *param)
 {
 	(void)param;
-	char pbuf[8];
-	//char *pbuf = os_malloc(128);
+	char *pbuf;
 	for(;;){
-		//os_sleep(TICK(10));
-		//s_free(os_malloc(300));
+		pbuf = os_malloc(100);
 		queue_read(&q2,pbuf,8,0);
 		if(!memcmp(pbuf,"AAAAAAAAA",8)){
 			
 		}else{
 			printf("%s\n",pbuf);
 		}
+		os_free(pbuf);
 	}
 }
 
 static int func6(void *param)
 {
 	(void)param;
-	//char pbuf[8];
-	//char *pbuf = os_malloc(128);
 	for(;;){
-		//os_free(os_malloc(10));
 		queue_write(&q2,"AAAAAAAA",8,0);
 		os_sleep(TICK(1));
 	}
@@ -51,7 +47,7 @@ static int func1(void *param)
 {
 	(void)param;
 	for(;;){
-		os_sleep(TICK(500));
+		os_sleep(TICK(300));
 		HAL_GPIO_TogglePin(LD3_GPIO_Port,LD3_Pin);
 		
 		char *pbuf = os_malloc(512);
@@ -67,9 +63,7 @@ static int func2(void *param)
 	(void)param;
 	static int data;
 	for(;;){
-		//data ++;
 		queue_write(&q1,"BBBBBBBB",8,0);
-		//os_free(os_malloc(1024));
 		os_sleep(TICK(10));
 #if 0		
 		if(data > 10){
@@ -103,15 +97,24 @@ static int func3(void *param)
 static int func4(void *param)
 {
 	(void)param;
+	char *p = 0;
 	volatile char str[500] = {0};
 	for(;;){
 		static ST_MD5 *md5;
+		
+		p = os_malloc(5000);		
+		os_sleep(TICK(2));
+		os_free(p);
+		//os_malloc(1);
 		md5 = os_malloc(sizeof(ST_MD5));
 		MD5_Handler(md5,(uint8_t *)"123",3);
 		os_free(md5);
-		str[4] = 123;
 		os_sleep(TICK(1));
-		os_free(os_malloc(600));
+		
+		
+		
+		
+		
 	}
 }
 

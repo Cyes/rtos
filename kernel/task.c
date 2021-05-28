@@ -45,6 +45,9 @@ void task_info(char *buffer)
 							ptd->name,ptd->uid,ptd->prio,ptd->stack_deep,(float)ptd->run/tmr *100);
 		ptd->run = 0;
 	}
+	length += sprintf(buffer + length, "[ mem: min=%dk cur=%dk total=%dk ]", \
+						(get_water_level()* CONFIG_HEAP_BLOCK)>>10,(get_free_block() * CONFIG_HEAP_BLOCK)>>10,CONFIG_HEAP_SIZE>>10);
+	//历史最小剩余量/当前剩余量/总量
 	tmr = 0;
 }
 

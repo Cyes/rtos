@@ -4,16 +4,29 @@
 
 ###  最小MCU调度系统
 
-- [x]  基于优先级的抢占式任务调度
-- [x]  队列和阻塞
-- [x]  延时和阻塞
-- [x]  任务创建和删除
+- [x] 基于优先级的抢占式任务调度
+- [x] 队列
+- [x] 延时
+- [x] 任务返回
+- [x] 动态内存
+- [ ] 定时器
+- [ ] 信号量
+- [ ] 互斥量
+- [x] 运行统计
+- [ ] 参数检查
+- [x] 栈地址监测
+- [ ] 优先级反转
+- [ ] 驱动框架
+- [ ] POSIX
+- [ ] 组件接口
+- [ ] 性能、安全、稳定性
+
 
 ### 编译环境
 
 * IDE ` keil-MDK 5.34 `
 * 编码 ` UTF-8 without BOM `
-* 硬件平台 ` STM32L432KCUx `
+* 芯片型号 ` STM32L432KCUx ` `CM4F`
 * 编译器版本 ` v6.16 `
 * 是否使用微库 ` true `
 * 是否使用FPU ` true `
@@ -21,23 +34,13 @@
 * 警告类型  ` AC5-like Warnings `
 * 编译标志 ` -xc -std=gnu99 --target=arm-arm-none-eabi -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard -c `
 
-### 硬件平台
+### 评估版
 
 * NUCLEO-L432KC
 
 `https://www.st.com/content/st_com/en/products/evaluation-tools/product-evaluation-tools/mcu-mpu-eval-tools/stm32-mcu-mpu-eval-tools/stm32-nucleo-boards/nucleo-l432kc.html`
 
 
-
-
-### 未实现的功能
-
-- [ ]  定时器
-- [x]  动态内存管理
-- [ ]  信号量和互斥量
-- [ ]  优先级反转解决
-- [ ]  性能、安全、稳定性
-- [ ]  驱动框架、参数检查和栈地址监测
 
 
 ### 参考
