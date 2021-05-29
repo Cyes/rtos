@@ -21,6 +21,33 @@ static struct mem_t __mem = {0};
 static  char __attribute((aligned (8))) __heap_buffer[CONFIG_HEAP_SIZE]; 
 
 
+#include "st7789.h"
+
+void mem_info(void)
+{
+	int length = 0;
+	int c_index;
+	int color = RED;
+	int x = 0,y = 0;
+	for(int i=0;i<CONFIG_MEM_BLOCK;i++){
+		if(__mem.flag[i]){
+			
+			color = (c_index)?RED:BLUE;		
+			lcd_drawchar_buffer(x,y,'~' +1,color,WHITE);
+			if(!GET_BIT_NEXT(__mem.flag[i])){
+				c_index = !c_index;
+			}			
+		}else{
+			lcd_drawchar_buffer(x,y,'~' +1,GREEN,WHITE);
+		}
+		x += 8;
+		if(x >240){
+			x = 0;
+			y+=16;
+		}
+	}
+}
+
 int get_free_block(void)
 {
 	return CONFIG_MEM_BLOCK - __mem.allocate;

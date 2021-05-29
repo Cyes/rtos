@@ -2,8 +2,11 @@
 
 #ifdef __GNUC__
 
+extern __IO uint32_t uwTick;
+
 void SysTick_Handler(void)
 {
+	//uwTick ++;
 	os_inc_tick();
 }
 void os_disable_irq(void)

@@ -9,7 +9,16 @@ void Error_Handler(void);
 void SystemClock_Config(void);
 void MX_USART2_UART_Init(void);
 void MX_TIM7_Init(void);
+void MX_SPI1_Init(void);
+
 int uart_send(char *buffer, int length);
+
+
+
+#define SET_DC_PIN(x) HAL_GPIO_WritePin(GPIOA,GPIO_PIN_5,x)
+#define SET_CS_PIN(x) HAL_GPIO_WritePin(GPIOA,GPIO_PIN_8,x)
+#define SET_RES_PIN(x) HAL_GPIO_WritePin(GPIOA,GPIO_PIN_4,x)
+#define SET_BLK_PIN(x) HAL_GPIO_WritePin(GPIOA,GPIO_PIN_9,x)
 
 
 
@@ -26,6 +35,7 @@ int uart_send(char *buffer, int length);
 
 char *myitoa(int num,char *str,int radix) ;
 void SystemClock_Config(void);
+void spix_readwrite(void *value,int length);
 
 //void os_printf(char *fmt, ...);
 #endif

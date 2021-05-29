@@ -4,7 +4,7 @@
 #include "queue.h"
 #include "timer.h"
 #include "bsp.h"
-
+#include "st7789.h"
 
 
 //STM32L432KC,MAX80MHZ,256KFLASH,64KSRAM
@@ -36,9 +36,17 @@ static int func5(void *param)
 static int func6(void *param)
 {
 	(void)param;
+	
+	
+	
 	for(;;){
 		queue_write(&q2,"AAAAAAAA",8,0);
 		os_sleep(TICK(1));
+		
+		//os_sleep(1000);
+		//os_malloc(512);
+		
+		
 	}
 }
 
@@ -47,12 +55,14 @@ static int func1(void *param)
 {
 	(void)param;
 	for(;;){
-		os_sleep(TICK(300));
+		os_sleep(TICK(500));
 		HAL_GPIO_TogglePin(LD3_GPIO_Port,LD3_Pin);
-		
 		char *pbuf = os_malloc(512);
-		task_info(pbuf);
+		task_info_space(pbuf);
+		lcd_drawstring(0,0,pbuf,RED,WHITE);
 		printf("%s\n",pbuf);
+		//mem_info();
+		
 		os_free(pbuf);
 		
 	}
@@ -121,12 +131,15 @@ static int func4(void *param)
 
 int main(void)
 {
+
   HAL_Init();
 	MX_GPIO_Init();
 	SystemClock_Config();    //32MHZ
 	os_heartbeat(DISABLE);     //1000HZ
 	MX_USART2_UART_Init();     //115200-N-8-1
 	MX_TIM7_Init();            //10000HZ IRQ
+	MX_SPI1_Init();
+	lcd_init();
 
 	
 	uart2_fops.write = uart_send;
@@ -145,8 +158,7 @@ int main(void)
 	}
 #endif
 	
-	
-	
+
 	
 	
 	

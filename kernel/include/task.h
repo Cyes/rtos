@@ -34,6 +34,7 @@ void task_list_move(struct task_desc_t *td, struct task_list_t *curlist, struct 
 void *find_luckly_task(struct task_list_t *list);
 
 
+void task_info_space(char *buffer);
 
 
 

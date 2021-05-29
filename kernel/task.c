@@ -31,6 +31,7 @@ struct psp_stack_t{
 struct task_list_t g_ready_task;
 struct task_list_t g_sleep_task;
 
+
 void task_info(char *buffer)
 {
 	extern uint32_t tmr;
@@ -47,7 +48,23 @@ void task_info(char *buffer)
 	}
 	length += sprintf(buffer + length, "[ mem: min=%dk cur=%dk total=%dk ]", \
 						(get_water_level()* CONFIG_HEAP_BLOCK)>>10,(get_free_block() * CONFIG_HEAP_BLOCK)>>10,CONFIG_HEAP_SIZE>>10);
-	//ÀúÊ·×îĞ¡Ê£ÓàÁ¿/µ±Ç°Ê£ÓàÁ¿/×ÜÁ¿
+	////å†å²æœ€å°å‰©ä½™é‡/å½“å‰å‰©ä½™é‡/æ€»é‡
+	tmr = 0;
+}
+void task_info_space(char *buffer)
+{
+	extern uint32_t tmr;
+	struct list_head *pos;
+	struct task_desc_t *ptd;
+	if(buffer == NULL) return ;
+	
+	int length = sprintf(buffer,"name   uid  prio stack  cpu\n");
+	list_for_each(pos,&g_task_mirror){
+		ptd = list_entry(pos,struct task_desc_t,mirror);
+		length += sprintf(buffer + length,"%-7s%-5d%-5d%-7d%.1f%%\n", \
+							ptd->name,ptd->uid,ptd->prio,ptd->stack_deep,(float)ptd->run/tmr *100);
+		ptd->run = 0;
+	}
 	tmr = 0;
 }
 
