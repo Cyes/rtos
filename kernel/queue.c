@@ -18,19 +18,19 @@
 int queue_reset(struct queue_t *q, int count, int size, void *memery)
 {
 	if(memery == NULL){
-		//memery = os_malloc(count * size)
-	}else{
-		q->size = size;
-		q->memery = memery;
-		q->write = q->read = 0;
-		q->txlock = q->rxlock = 0;
-		q->count = q->message = count;
-		
-		for(int i=0;i<MAX_PRIO_NUMBER;i++){
-			INIT_LIST_HEAD(&q->tx.list[i]);
-			INIT_LIST_HEAD(&q->rx.list[i]);
-		}
+		memery = os_malloc(count * size);
 	}
+	q->size = size;
+	q->memery = memery;
+	q->write = q->read = 0;
+	q->txlock = q->rxlock = 0;
+	q->count = q->message = count;
+	
+	for(int i=0;i<MAX_PRIO_NUMBER;i++){
+		INIT_LIST_HEAD(&q->tx.list[i]);
+		INIT_LIST_HEAD(&q->rx.list[i]);
+	}
+	
 	return 0;
 }
 
@@ -64,7 +64,10 @@ int queue_write(struct queue_t *q, const char *buffer, int length, int tick)
 			q->write %= q->count;	
 			if(q->rx.prio_bit){
 				ptd = find_luckly_task(&q->rx);
-				task_list_move(ptd,&q->rx ,&g_ready_task);
+				list_move(&ptd->list,&g_ready_task.list[ptd->prio]);
+				prio_bit_update(&g_ready_task,ptd->prio,1);
+				prio_bit_update(&q->rx,ptd->prio,0);
+			
 				if(ptd->prio < currentTD->prio){
 					os_yield();
 				}
@@ -72,7 +75,10 @@ int queue_write(struct queue_t *q, const char *buffer, int length, int tick)
 			os_exit_critical();
 			return 0;
 		}else{
-			task_list_move(currentTD,&g_ready_task,&q->tx);
+			list_move(&currentTD->list,&q->tx.list[currentTD->prio]);
+			prio_bit_update(&g_ready_task,currentTD->prio,0);
+			prio_bit_update(&q->tx,currentTD->prio,1);
+				
 			os_exit_critical();
 			os_yield();
 			
@@ -98,7 +104,10 @@ int queue_read(struct queue_t *q, char *buffer, int length, int tick)
 			q->read %= q->count;	
 			if(q->tx.prio_bit){
 				ptd = find_luckly_task(&q->tx);
-				task_list_move(ptd,&q->tx ,&g_ready_task);
+				list_move(&ptd->list,&g_ready_task.list[ptd->prio]);
+				prio_bit_update(&g_ready_task,ptd->prio,1);
+				prio_bit_update(&q->tx,ptd->prio,0);			
+				
 				if(ptd->prio < currentTD->prio){
 					os_yield();
 				}	
@@ -106,7 +115,10 @@ int queue_read(struct queue_t *q, char *buffer, int length, int tick)
 			os_exit_critical();
 			return 0;
 		}else{
-			task_list_move(currentTD,&g_ready_task,&q->rx);
+			list_move(&currentTD->list,&q->rx.list[currentTD->prio]);
+			prio_bit_update(&g_ready_task,currentTD->prio,0);
+			prio_bit_update(&q->rx,currentTD->prio,1);
+	
 			os_exit_critical();
 			os_yield();
 		}

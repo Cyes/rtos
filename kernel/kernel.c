@@ -47,8 +47,6 @@ void os_yield(void)
 
 
 
-
-
 void os_start(void)
 {
 	create_daemon();//IDLE

@@ -7,8 +7,8 @@
 #define HANDLER_MODE_LR (0xFFFFFFFD)
 #define THUMB_MODE_XPSR (0x01000000)
 
-struct task_list_t del_task;
 LIST_HEAD(g_task_mirror);
+LIST_HEAD(g_suspend_task);
 
 static int g_task_id = 0;
 struct task_desc_t *currentTD;
@@ -90,31 +90,26 @@ void *find_luckly_task(struct task_list_t *list)
 	return  list_entry(pos,struct task_desc_t,list);
 }
 
-
-void task_list_add(struct task_desc_t *td, struct task_list_t *list)
+void prio_bit_update(struct task_list_t *curlist,int prio,int stat)
 {
-    list_add(&td->list, &list->list[td->prio]);
-    (list->prio_bit) |= PRIORITY_BIT(td->prio);
-    list->active ++;
-}
-
-void task_list_move(struct task_desc_t *td, struct task_list_t *curlist, struct task_list_t *newlist)
-{
-	int prio = td->prio;
-	
-	list_move(&td->list,&newlist->list[prio]);
-	if(list_empty(&curlist->list[prio])){
-		(curlist->prio_bit) &= ~PRIORITY_BIT(prio);
+	if(stat){
+		(curlist->prio_bit) |= PRIORITY_BIT(prio);
+		curlist->active ++;
+	}else{
+		if(list_empty(&curlist->list[prio])){
+			(curlist->prio_bit) &= ~PRIORITY_BIT(prio);
+			curlist->active --;
+		}	
 	}
-	(newlist->prio_bit) |= PRIORITY_BIT(prio);
-	curlist->active --;
-	newlist->active ++;
-	
 }
+
+
+
 
 void os_task_exit(void)
 {
-	task_list_move(currentTD,&g_ready_task,&del_task);
+	list_move(&currentTD->list,&g_suspend_task);
+	prio_bit_update(&g_ready_task,currentTD->prio,0);
 	list_del(&currentTD->mirror);
 	os_yield();
 	for(;;);
@@ -146,7 +141,9 @@ void task_create(struct task_desc_t *td,void *stack,int stack_size,void *pfunc,v
 	psk->r14_last = HANDLER_MODE_LR;	
 	
 	INIT_LIST_HEAD(&td->list);
-	task_list_add(td,&g_ready_task);
+	//task_list_add(td,&g_ready_task);
+	list_add(&td->list,&g_ready_task.list[td->prio]);
+	prio_bit_update(&g_ready_task,td->prio,1);
 	list_add_tail(&td->mirror,&g_task_mirror);
 
 }

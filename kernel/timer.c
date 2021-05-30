@@ -17,8 +17,10 @@ void os_tick_callback(void)
 				if(cur->tick){
 					cur->tick -- ;
 				}
-				if(!cur->tick){
-					task_list_move(cur,&g_sleep_task,&g_ready_task);
+				if(!cur->tick){				
+					list_move(&cur->list,&g_ready_task.list[cur->prio]);
+					prio_bit_update(&g_ready_task,cur->prio,1);
+					prio_bit_update(&g_sleep_task,cur->prio,0);
 				}
 			}
 		}
@@ -28,12 +30,18 @@ void os_tick_callback(void)
 
 void os_sleep(int tick)
 {
+	
+	struct list_head *pos;
 	if(0 == tick){
 		return;
 	}
 	os_schedule(false);
 	currentTD->tick = tick;
-	task_list_move(currentTD,&g_ready_task,&g_sleep_task);
+	
+	list_move(&currentTD->list,&g_sleep_task.list[currentTD->prio]);
+	prio_bit_update(&g_ready_task,currentTD->prio,0);
+	prio_bit_update(&g_sleep_task,currentTD->prio,1);
+	
 	os_schedule(true);
 	os_yield();
 	

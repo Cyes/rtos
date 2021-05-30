@@ -7,6 +7,7 @@
 #define DEFAULT_STACK_BYTE (1024)
 
 
+
 struct task_desc_t{
 	void *stack;
 	void *stack_base;
@@ -23,27 +24,25 @@ struct task_desc_t{
 
 } ;
 
-	extern struct task_list_t g_ready_task;
-	extern struct task_list_t g_sleep_task;
+extern struct task_desc_t *currentTD;
+extern struct task_list_t g_ready_task;
+extern struct task_list_t g_sleep_task;
 
 #define PRIORITY_BIT(x) ((1 << (31 -x)))
 #define PRIORITY_ID(x) (__builtin_clz(x))
 
 
-void task_list_move(struct task_desc_t *td, struct task_list_t *curlist, struct task_list_t *newlist);
-void *find_luckly_task(struct task_list_t *list);
-
-
-void task_info_space(char *buffer);
 
 
 
-//extern struct list_head g_task_list;
-extern struct task_desc_t *currentTD;
+
 
 void next_context(void);
 void create_daemon(void);
 void task_info(char *buffer);
+void task_info_space(char *buffer);
+void *find_luckly_task(struct task_list_t *list);
+void prio_bit_update(struct task_list_t *curlist,int prio,int stat);
 void task_create(struct task_desc_t *td,void *stack,int stack_size, \
                  void *func,void *param,int prio,void *name);
 
