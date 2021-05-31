@@ -409,19 +409,9 @@
           <GroupName>kernel</GroupName>
           <Files>
             <File>
-              <FileName>kernel.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\kernel\kernel.c</FilePath>
-            </File>
-            <File>
               <FileName>port.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\kernel\port.c</FilePath>
-            </File>
-            <File>
-              <FileName>queue.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\kernel\queue.c</FilePath>
             </File>
             <File>
               <FileName>task.c</FileName>
@@ -429,9 +419,29 @@
               <FilePath>..\kernel\task.c</FilePath>
             </File>
             <File>
+              <FileName>kernel.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\kernel\kernel.c</FilePath>
+            </File>
+            <File>
               <FileName>timer.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\kernel\timer.c</FilePath>
+            </File>
+            <File>
+              <FileName>queue.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\kernel\queue.c</FilePath>
+            </File>
+            <File>
+              <FileName>mutex.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\kernel\mutex.c</FilePath>
+            </File>
+            <File>
+              <FileName>semaphore.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\kernel\semaphore.c</FilePath>
             </File>
             <File>
               <FileName>dynamic_block .c</FileName>

@@ -47,9 +47,13 @@ void os_yield(void)
 
 
 
+extern void system_idle_task_create(void);
+extern void system_timer_task_create(void);
+
 void os_start(void)
 {
-	create_daemon();//IDLE
+	system_timer_task_create();
+	system_idle_task_create();
 	next_context();
 	*(uint32_t*)0xE000ED20 = 0xF0F00000;
 	os_heartbeat(ENABLE);

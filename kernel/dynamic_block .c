@@ -1,6 +1,9 @@
 #include "dynamic_block.h"
 
 
+
+
+
 #define SET_BIT_NEXT      (1)
 #define SET_BIT_USED      (2)
 #define RESET_BIT_MEM     (0)
@@ -21,7 +24,6 @@ static struct mem_t __mem = {0};
 static  char __attribute((aligned (8))) __heap_buffer[CONFIG_HEAP_SIZE]; 
 
 
-#include "st7789.h"
 
 void mem_info(void)
 {

@@ -2,14 +2,15 @@
 #define __KERNEL_H__
 
 #include "stm32l4xx_hal.h"
+#include "dynamic_block.h"
 #include <string.h>
 #include <stdint.h>
 #include "list.h"
 #include "task.h"
-#include "dynamic_block.h"
+#include "profile.h"
+#include "st7789.h"
 
-#define MAX_PRIO_NUMBER (32)  //support 32 level priority, max = 31
-#define SYSTEM_TICK_FREQ (1000U)
+
 #define TICK(x) (x * SYSTEM_TICK_FREQ / 1000U)
 #ifndef false
 #define false (0)
@@ -18,9 +19,9 @@
 #define printk printf
 
 struct task_list_t{
-		unsigned int active;                  //total task
-    unsigned int prio_bit;                //[(MAX_PRI_NUMBER +31)/32];     //bit flag
-    struct list_head list[MAX_PRIO_NUMBER];    //就绪任务链表数组
+		unsigned int active;
+    unsigned int prio_bit;
+    struct list_head list[MAX_PRIO_NUMBER];
 };
 
 

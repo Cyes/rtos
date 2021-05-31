@@ -4,7 +4,6 @@
 #include "kernel.h"
 #include "list.h"
 
-#define DEFAULT_STACK_BYTE (1024)
 
 
 
@@ -13,7 +12,8 @@ struct task_desc_t{
 	void *stack_base;
 	int  stack_deep;
 	int uid:16;
-	int prio:16;
+	int prio:8;
+	int prio_save:8;
 	void *func;
 	char *name;
 	void *param;
@@ -24,12 +24,13 @@ struct task_desc_t{
 
 } ;
 
-extern struct task_desc_t *currentTD;
-extern struct task_list_t g_ready_task;
-extern struct task_list_t g_sleep_task;
 
 #define PRIORITY_BIT(x) ((1 << (31 -x)))
 #define PRIORITY_ID(x) (__builtin_clz(x))
+
+extern struct task_desc_t *currentTD;
+extern struct task_list_t g_ready_task;
+extern struct task_list_t g_sleep_task;
 
 
 
@@ -38,13 +39,14 @@ extern struct task_list_t g_sleep_task;
 
 
 void next_context(void);
-void create_daemon(void);
 void task_info(char *buffer);
 void task_info_space(char *buffer);
 void *find_luckly_task(struct task_list_t *list);
 void prio_bit_update(struct task_list_t *curlist,int prio,int stat);
 void task_create(struct task_desc_t *td,void *stack,int stack_size, \
                  void *func,void *param,int prio,void *name);
+
+
 
 
 

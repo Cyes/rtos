@@ -7,8 +7,6 @@ void mem_info(void);
 
 
 
-#define CONFIG_HEAP_SIZE  (1024 * 40 - 1024 - 256)
-#define CONFIG_HEAP_BLOCK (256)
 
 void os_free(void *p);
 void *os_malloc(int length);

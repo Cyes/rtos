@@ -11,8 +11,10 @@ LIST_HEAD(g_task_mirror);
 LIST_HEAD(g_suspend_task);
 
 static int g_task_id = 0;
+struct task_desc_t __idle;
 struct task_desc_t *currentTD;
-struct task_desc_t td_idle;
+struct task_list_t g_ready_task;
+struct task_list_t g_sleep_task;
 
 struct psp_stack_t{
 	int r14_last;
@@ -28,8 +30,6 @@ struct psp_stack_t{
 	int xpsr;
 };
 
-struct task_list_t g_ready_task;
-struct task_list_t g_sleep_task;
 
 
 void task_info(char *buffer)
@@ -58,10 +58,10 @@ void task_info_space(char *buffer)
 	struct task_desc_t *ptd;
 	if(buffer == NULL) return ;
 	
-	int length = sprintf(buffer,"name   uid  prio stack  cpu\n");
+	int length = sprintf(buffer,"name   uid  prio stack  cpu   \n");
 	list_for_each(pos,&g_task_mirror){
 		ptd = list_entry(pos,struct task_desc_t,mirror);
-		length += sprintf(buffer + length,"%-7s%-5d%-5d%-7d%.1f%%\n", \
+		length += sprintf(buffer + length,"%-7s%-5X%-5d%-7d%.1f%%  \n", \
 							ptd->name,ptd->uid,ptd->prio,ptd->stack_deep,(float)ptd->run/tmr *100);
 		ptd->run = 0;
 	}
@@ -115,10 +115,18 @@ void os_task_exit(void)
 	for(;;);
 }
 
-
+static int use_init_tasl_list = false;
 void task_create(struct task_desc_t *td,void *stack,int stack_size,void *pfunc,void *param,int prio,void *name)
 {
 	struct psp_stack_t *psk;
+	
+	if(false == use_init_tasl_list){
+		use_init_tasl_list = true;		
+		for(int i=0;i<MAX_PRIO_NUMBER;i++){
+			INIT_LIST_HEAD(&g_ready_task.list[i]);
+			INIT_LIST_HEAD(&g_sleep_task.list[i]);
+		}		
+	}
 	
 	td->uid = g_task_id ++;
 	td->prio = prio % MAX_PRIO_NUMBER;
@@ -127,9 +135,6 @@ void task_create(struct task_desc_t *td,void *stack,int stack_size,void *pfunc,v
 		stack = os_malloc(stack_size);
 	}
 	td->stack_base = stack + stack_size;
-	//stack_size = stack_size >> 2;
-	//td->stack = (int *)stack  +stack_size -17;
-	//psk = (void*)((int*)stack +stack_size -9);
 	td->stack = (char *)td->stack_base - 68;
 	psk = (void *)((char *)td->stack_base - 36);
 	
@@ -141,7 +146,6 @@ void task_create(struct task_desc_t *td,void *stack,int stack_size,void *pfunc,v
 	psk->r14_last = HANDLER_MODE_LR;	
 	
 	INIT_LIST_HEAD(&td->list);
-	//task_list_add(td,&g_ready_task);
 	list_add(&td->list,&g_ready_task.list[td->prio]);
 	prio_bit_update(&g_ready_task,td->prio,1);
 	list_add_tail(&td->mirror,&g_task_mirror);
@@ -154,16 +158,23 @@ void next_context(void)
 	currentTD->stack_deep = (currentTD->stack_base - currentTD->stack );
 
 }
-static void daemon_task(void *param)
+
+
+
+
+
+static void __idle_task(void *param)
 {
 	for(;;){
-		//os_yield();
+		
 	}
 }
 
-void create_daemon(void)
+
+void system_idle_task_create(void)
 {
-	task_create(&td_idle,0,IDLE_STACK_BYTE,daemon_task,(void *)0,IDLE_TASK_PRIO,"daemon");
+	task_create(&__idle,0,IDLE_STACK_BYTE,__idle_task,(void *)0,IDLE_TASK_PRIO,"idle");
 }
+
 
 

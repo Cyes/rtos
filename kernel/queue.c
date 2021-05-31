@@ -15,7 +15,8 @@
 
 
 */
-int queue_reset(struct queue_t *q, int count, int size, void *memery)
+
+int queue_create(struct queue_t *q, int count, int size, void *memery)
 {
 	if(memery == NULL){
 		memery = os_malloc(count * size);
@@ -124,5 +125,7 @@ int queue_read(struct queue_t *q, char *buffer, int length, int tick)
 		}
 	}	
 }
+
+
 
 

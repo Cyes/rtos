@@ -5,7 +5,12 @@
 #include <string.h>
 #include <stdio.h>
 #include "kernel.h"
-//#include ""
+
+
+
+
+
+
 struct queue_t{
 	char *memery;
 	int message;
@@ -15,7 +20,7 @@ struct queue_t{
 	struct task_list_t tx,rx;
 };
 
-int queue_reset(struct queue_t *q, int count, int size, void *memery);
+int queue_create(struct queue_t *q, int count, int size, void *memery);
 int queue_read(struct queue_t *q, char *buffer, int length, int tick);
 int queue_write(struct queue_t *q, const char *buffer, int length, int tick);
 
