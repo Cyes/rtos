@@ -42,9 +42,8 @@ void os_exit_critical(void)
 
 void os_yield(void)
 {
-	SCB->ICSR |= 1<< 28; //set pendsv
+	set_pendsv();
 }
-
 
 
 extern void system_idle_task_create(void);
@@ -63,11 +62,7 @@ void os_start(void)
 
 void os_heartbeat(int status)
 {
-	if(status){
-		SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;//1UL
-	}else{
-		SysTick->CTRL &= ~ (SysTick_CTRL_ENABLE_Msk);
-	}
+	set_systick(status);
 }
 
 

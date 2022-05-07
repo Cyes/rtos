@@ -8,12 +8,18 @@ void os_sleep(int tick);
 void os_tick_callback(void);
 
 
-#ifdef CONFIG_USE_TIMER
-enum{
-	PERIODIC_ONCE = 0,
-	PERIODIC_LOOP,
+//#ifdef CONFIG_USE_TIMER
+struct timer_t{
+	void *func;
+	int param;
+	int timeout;
+	int reload;
+	struct list_head list;
 };
-void periodic_task(void *func, void *param, int timeout, int mode);
-#endif
+
+struct timer_t *timer_john(void *func, int param, int timeout);
+void os_timer_callback(void);
+
+//#endif
 
 #endif

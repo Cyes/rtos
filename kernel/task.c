@@ -1,6 +1,6 @@
 #include "task.h"
-#include <stdio.h>
 
+#define STACK_CHECK_FLAG (0XAAAAAAAA)
 
 #define IDLE_STACK_BYTE (256)
 #define IDLE_TASK_PRIO (MAX_PRIO_NUMBER -1)
@@ -9,12 +9,12 @@
 
 LIST_HEAD(g_task_mirror);
 LIST_HEAD(g_suspend_task);
+LIST_HEAD(g_sleep_task);
 
 static int g_task_id = 0;
-struct task_desc_t __idle;
+
 struct task_desc_t *currentTD;
 struct task_list_t g_ready_task;
-struct task_list_t g_sleep_task;
 
 struct psp_stack_t{
 	int r14_last;
@@ -32,51 +32,14 @@ struct psp_stack_t{
 
 
 
-void task_info(char *buffer)
-{
-	extern uint32_t tmr;
-	struct list_head *pos;
-	struct task_desc_t *ptd;
-	if(buffer == NULL) return ;
-	
-	int length = sprintf(buffer,"\nname\tuid\tprio\tstack\tcpu\n");
-	list_for_each(pos,&g_task_mirror){
-		ptd = list_entry(pos,struct task_desc_t,mirror);
-		length += sprintf(buffer + length,"%s\t%d\t%d\t%d\t%.1f%%\n", \
-							ptd->name,ptd->uid,ptd->prio,ptd->stack_deep,(float)ptd->run/tmr *100);
-		ptd->run = 0;
-	}
-	length += sprintf(buffer + length, "[ mem: min=%dk cur=%dk total=%dk ]", \
-						(get_water_level()* CONFIG_HEAP_BLOCK)>>10,(get_free_block() * CONFIG_HEAP_BLOCK)>>10,CONFIG_HEAP_SIZE>>10);
-	////历史最小剩余量/当前剩余量/总量
-	tmr = 0;
-}
-void task_info_space(char *buffer)
-{
-	extern uint32_t tmr;
-	struct list_head *pos;
-	struct task_desc_t *ptd;
-	if(buffer == NULL) return ;
-	
-	int length = sprintf(buffer,"name   uid  prio stack  cpu   \n");
-	list_for_each(pos,&g_task_mirror){
-		ptd = list_entry(pos,struct task_desc_t,mirror);
-		length += sprintf(buffer + length,"%-7s%-5X%-5d%-7d%.1f%%  \n", \
-							ptd->name,ptd->uid,ptd->prio,ptd->stack_deep,(float)ptd->run/tmr *100);
-		ptd->run = 0;
-	}
-	tmr = 0;
-}
-
-
 void *find_luckly_task(struct task_list_t *list)
 {
+    //irq disable alread
 	struct list_head *pos;
 	struct task_desc_t *ptd;
-	//if(!list->prio_bit)printf("error bit\n");
 	int id = PRIORITY_ID(list->prio_bit);
 	
-#if 0	
+#ifdef DBG_READY_TASK_LIST	
 	printf("list: ");
 	list_for_each(pos,&list->list[id]){
 		ptd = list_entry(pos,struct task_desc_t,list);
@@ -92,6 +55,7 @@ void *find_luckly_task(struct task_list_t *list)
 
 void prio_bit_update(struct task_list_t *curlist,int prio,int stat)
 {
+    //must running 'irq disable'
 	if(stat){
 		(curlist->prio_bit) |= PRIORITY_BIT(prio);
 		curlist->active ++;
@@ -104,39 +68,49 @@ void prio_bit_update(struct task_list_t *curlist,int prio,int stat)
 }
 
 
-
-
 void os_task_exit(void)
 {
+    os_enter_critical();
 	list_move(&currentTD->list,&g_suspend_task);
 	prio_bit_update(&g_ready_task,currentTD->prio,0);
 	list_del(&currentTD->mirror);
+    os_exit_critical();
 	os_yield();
 	for(;;);
 }
 
 static int use_init_tasl_list = false;
-void task_create(struct task_desc_t *td,void *stack,int stack_size,void *pfunc,void *param,int prio,void *name)
+
+
+int task_create_static(struct task_desc_t *td,void *stack,int stack_size,void *pfunc,void *param,int prio,void *name)
 {
-	struct psp_stack_t *psk;
 	
+	os_enter_critical();
+	
+	struct psp_stack_t *psk;
+	if(NULL == td || NULL == stack){
+        return -1;
+    }
+    
 	if(false == use_init_tasl_list){
 		use_init_tasl_list = true;		
 		for(int i=0;i<MAX_PRIO_NUMBER;i++){
 			INIT_LIST_HEAD(&g_ready_task.list[i]);
-			INIT_LIST_HEAD(&g_sleep_task.list[i]);
 		}		
 	}
-	
+    
+#ifdef  CONFIG_STACK_CHECK
+    memset(stack,STACK_CHECK_FLAG,stack_size);
+#endif 
+    
 	td->uid = g_task_id ++;
 	td->prio = prio % MAX_PRIO_NUMBER;
 	td->name = name;
-	if(stack == NULL){
-		stack = os_malloc(stack_size);
-	}
-	td->stack_base = stack + stack_size;
-	td->stack = (char *)td->stack_base - 68;
-	psk = (void *)((char *)td->stack_base - 36);
+    td->stack_deep = 0;
+    td->stack_base = stack;
+	td->stack_top = stack + stack_size;
+	td->stack = (char *)td->stack_top - 68;
+	psk = (void *)((char *)td->stack_top - 36);
 	
 	
 	psk->r0 = (int)param;
@@ -149,31 +123,115 @@ void task_create(struct task_desc_t *td,void *stack,int stack_size,void *pfunc,v
 	list_add(&td->list,&g_ready_task.list[td->prio]);
 	prio_bit_update(&g_ready_task,td->prio,1);
 	list_add_tail(&td->mirror,&g_task_mirror);
-
+	
+	os_exit_critical();
+    return 0;
 }
+
+
+struct task_desc_t *task_create(int stack_size,void *pfunc,void *param,int prio,void *name)
+{
+	
+	os_enter_critical();
+	
+	struct task_desc_t *td;
+	struct psp_stack_t *psk;
+    
+	if(false == use_init_tasl_list){
+		use_init_tasl_list = true;		
+		for(int i=0;i<MAX_PRIO_NUMBER;i++){
+			INIT_LIST_HEAD(&g_ready_task.list[i]);
+		}
+	}
+
+    void *stack = os_malloc(stack_size);
+    td = os_malloc(sizeof(struct task_desc_t));
+#ifdef  CONFIG_STACK_CHECK
+    memset(stack,STACK_CHECK_FLAG,stack_size);
+#endif    
+	if(NULL == td || NULL == stack){
+        return NULL;
+    }
+    
+	td->uid = g_task_id ++;
+	td->prio = prio % MAX_PRIO_NUMBER;
+	td->name = name;
+    td->stack_deep = 0;
+    td->stack_base = stack;
+	td->stack_top = stack + stack_size;//top
+	td->stack = (char *)td->stack_top - 68;
+	psk = (void *)((char *)td->stack_top - 36);
+	
+	
+	psk->r0 = (int)param;
+	psk->pc = (int)pfunc;
+	psk->lr = (int)os_task_exit;
+	psk->xpsr = THUMB_MODE_XPSR;
+	psk->r14_last = HANDLER_MODE_LR;	
+	
+	INIT_LIST_HEAD(&td->list);
+	list_add(&td->list,&g_ready_task.list[td->prio]);
+	prio_bit_update(&g_ready_task,td->prio,1);
+	list_add_tail(&td->mirror,&g_task_mirror);
+	
+	os_exit_critical();
+    return td;
+}
+
+
+void simple_stack_check(struct task_desc_t *td)
+{
+     //irq disable alread
+    volatile int stack_free = 0;
+    int stack_size = td->stack_top - td->stack_base;
+    
+    for(int i=0;i<stack_size;i+=4){
+        int val = *(int*)(((char *)td->stack_base) + i);
+        if(val == STACK_CHECK_FLAG){
+            stack_free ++ ;
+        }
+    }
+    td->stack_used = stack_size - (stack_free *4);
+}
+
 
 void next_context(void)
 {
+    //irq disable alread
 	currentTD = find_luckly_task(&g_ready_task);	
-	currentTD->stack_deep = (currentTD->stack_base - currentTD->stack );
 
+#ifdef  CONFIG_STACK_CHECK
+    simple_stack_check(currentTD);
+#else
+	currentTD->stack_used = (currentTD->stack_top - currentTD->stack );    
+#endif
+    currentTD->stack_deep = ( currentTD->stack_used > currentTD->stack_deep ) ?  \
+        currentTD->stack_used : currentTD->stack_deep;
 }
 
 
-
+void *query_task_free(void)
+{
+	if(list_empty(&g_suspend_task)){
+		struct list_head *next = g_suspend_task.next;
+		struct task_desc_t *ptd = container_of(next,struct task_desc_t,list);
+		return ptd->stack_top;
+	}
+	return 0;
+}
 
 
 static void __idle_task(void *param)
 {
 	for(;;){
-		
+		__WFI();
 	}
 }
 
 
 void system_idle_task_create(void)
 {
-	task_create(&__idle,0,IDLE_STACK_BYTE,__idle_task,(void *)0,IDLE_TASK_PRIO,"idle");
+	task_create(IDLE_STACK_BYTE,__idle_task,(void *)0,IDLE_TASK_PRIO,"idle");
 }
 
 

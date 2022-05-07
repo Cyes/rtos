@@ -1,14 +1,17 @@
 #ifndef __KERNEL_H__
 #define __KERNEL_H__
 
-#include "stm32l4xx_hal.h"
-#include "dynamic_block.h"
-#include <string.h>
-#include <stdint.h>
 #include "list.h"
 #include "task.h"
+#include "port.h"
+#include "timer.h"
 #include "profile.h"
-#include "st7789.h"
+#include "dynamic_block.h"
+
+#include <string.h>
+#include <stdint.h>
+#include <stdio.h>
+
 
 
 #define TICK(x) (x * SYSTEM_TICK_FREQ / 1000U)

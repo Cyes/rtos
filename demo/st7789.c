@@ -190,6 +190,34 @@ void lcd_drawchar(uint16_t x,uint16_t y,uint8_t num,uint16_t fc,uint16_t bc)
 	}   	 	  
 }
 
+
+void lcd_drawpix_buffer(uint16_t x,uint16_t y,uint16_t color)
+{
+    #define OFFSET_X  4
+    #define OFFSET_Y  4
+    static uint8_t symbal[][16] = {0x00,0x7E,0x7E,0x7E,0x7E,0x7E,0x7E,0x7E,0x7E,0x7E,0x7E,0x7E,0x7E,0x7E,0x7E,0x00};
+	uint16_t font_color = bswap_16(color);
+	uint16_t back_color = bswap_16(WHITE);
+	static uint16_t charbuf[OFFSET_X *OFFSET_Y];
+	
+	lcd_window(x,y,x+OFFSET_X-1,y+OFFSET_Y-1);
+	char *p = (char *)&symbal[0];
+
+	
+	for(int i=0;i<OFFSET_Y;i++){ 
+			for(int t=0;t<OFFSET_X;t++){
+				if(*p == 0){
+					charbuf[t + (i * OFFSET_X)] = back_color ;
+				}else{
+					charbuf[t + (i * OFFSET_X)] = (*p &(1<<t)) ? font_color : back_color ; 
+				}				
+			}		
+		p++;
+	}
+
+	spix_readwrite(charbuf,OFFSET_X * OFFSET_Y * 2);
+	
+}
 void lcd_drawchar_buffer(uint16_t x,uint16_t y,uint8_t data,uint16_t fc,uint16_t bc)
 {
 	uint16_t font_color = bswap_16(fc);

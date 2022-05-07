@@ -15,16 +15,23 @@ struct list_head
     for (pos = (head)->next, n = pos->next; pos != (head); \
         pos = n, n = pos->next)
 
-#if 1
+
+#ifndef offsetof
+
+#define offsetof(type, member)   (size_t)&(((type *)0)->member)
+
+#endif
+
+
+
 
 #define container_of(ptr, type, member) ({            \
-    const typeof(((type *)0)->member) * __mptr = (ptr);    \
+    const __typeof(((type *)0)->member) * __mptr = (ptr);    \
     (type *)((char *)__mptr - offsetof(type, member)); })
 
 #define list_entry(ptr, type, member) \
     container_of(ptr, type, member)
 
-#endif
 
 #define LIST_HEAD_INIT(name) { &(name), &(name) }
 

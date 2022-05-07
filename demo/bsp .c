@@ -410,7 +410,7 @@ void NMI_Handler(void)
 
 void HardFault_Handler(void)
 {
-	USART2->TDR = 0X23;
+    USART2->TDR = 0X23;
   while (1)
   {
   }

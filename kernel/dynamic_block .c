@@ -7,48 +7,29 @@
 #define SET_BIT_NEXT      (1)
 #define SET_BIT_USED      (2)
 #define RESET_BIT_MEM     (0)
-#define GET_BIT_USED(x)   (x&2)
-#define GET_BIT_NEXT(x)   (x&1)
-#define CONFIG_MEM_BLOCK (CONFIG_HEAP_SIZE/CONFIG_HEAP_BLOCK)
+
+//malloc 128 bytes
+//flag: [3] [3] [3] [2] [0]
+//3 = SET_BIT_NEXT | SET_BIT_USED
 
 
 
-struct mem_t{
-	char *base;
-	int allocate;
-	int waterlevel;
-	char flag[CONFIG_MEM_BLOCK];
-};
+
 
 static struct mem_t __mem = {0};
-static  char __attribute((aligned (8))) __heap_buffer[CONFIG_HEAP_SIZE]; 
+static char __attribute((aligned (CONFIG_HEAP_BLOCK))) __heap_buffer[CONFIG_HEAP_SIZE]; 
 
-
-
-void mem_info(void)
+inline uint32_t align(uint32_t num,uint32_t nbyte)
 {
-	int length = 0;
-	int c_index;
-	int color = RED;
-	int x = 0,y = 0;
-	for(int i=0;i<CONFIG_MEM_BLOCK;i++){
-		if(__mem.flag[i]){
-			
-			color = (c_index)?RED:BLUE;		
-			lcd_drawchar_buffer(x,y,'~' +1,color,WHITE);
-			if(!GET_BIT_NEXT(__mem.flag[i])){
-				c_index = !c_index;
-			}			
-		}else{
-			lcd_drawchar_buffer(x,y,'~' +1,GREEN,WHITE);
-		}
-		x += 8;
-		if(x >240){
-			x = 0;
-			y+=16;
-		}
-	}
+    return ( num + nbyte -1 ) & ( ~(uint32_t)(nbyte -1) );
 }
+
+
+const void *get_mem_desc(void)
+{
+	return (void *)&__mem;
+}
+
 
 int get_free_block(void)
 {
@@ -61,6 +42,7 @@ int get_water_level(void)
 
 static void mem_init(void)
 {
+    os_enter_critical();
 	__mem.allocate = 0;
 	__mem.waterlevel = 0;
 	__mem.base = __heap_buffer;
@@ -68,25 +50,28 @@ static void mem_init(void)
 	for(int i=0;i<CONFIG_MEM_BLOCK;i++){
 		__mem.flag[i] = RESET_BIT_MEM;
 	}
+    os_exit_critical();
 }
+
 __attribute__((weak)) void malloc_failed(void)
 {
 	//printf("not enough memory \n");
 }
 
-/* THIS = 7w/s  FreeRTOS = 5w/s @512Byte @32MHZ */
+
 void *os_malloc(int length) 
 {
-	int idle = 0;
-	int index = 0;
 		
 	os_enter_critical();
 	
-	while(__mem.base == 0){
+	int idle = 0;
+	int index = 0;
+	
+	while(__mem.base == NULL){
 		mem_init();
 	}
 	
-	char *result = 0;
+	char *result = NULL;
 	int block = (length + CONFIG_HEAP_BLOCK -1)/CONFIG_HEAP_BLOCK;
 	
 	for(index = 0 ;index < CONFIG_MEM_BLOCK ; index++){
@@ -118,9 +103,22 @@ void *os_malloc(int length)
 	os_exit_critical();
 	return result;
 }
+
 void os_free(void *point)
 {
-	if(point == 0)return;
+	if(point == NULL)return;
+    void *pstart = __mem.base;
+    void *pend = __mem.base + CONFIG_HEAP_SIZE;
+
+    if((point < pstart) || (point >= pend)){
+        return ;
+    }
+    
+    if(((int)point) & (CONFIG_HEAP_BLOCK -1)){
+        return ;
+    }
+    
+    
 	os_enter_critical();
 	int index = ((char *)point - __mem.base)/CONFIG_HEAP_BLOCK;
 	for(;GET_BIT_NEXT(__mem.flag[index]);index++){
@@ -129,7 +127,19 @@ void os_free(void *point)
 	}
 	__mem.allocate -- ;
 	__mem.flag[index] = 0;
+
+	
 	os_exit_critical();
 }
 
+
+void *os_realloc(void *ptr, int length)
+{
+    void *pnew = os_malloc(length);
+    if(NULL != pnew){
+        memcpy(pnew,ptr,length);
+        os_free(ptr);
+    }
+    return pnew;
+}
 
